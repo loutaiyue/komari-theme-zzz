@@ -102,6 +102,7 @@ const Footer = () => {
             gap="1"
             align={{ initial: "center", md: "start" }}
           >
+            <div className="zzz-footer-brand">KOMARI<span>SIGNAL CONTROL</span></div>
             <Text size="2" color="gray">
               Powered by Komari Monitor.
             </Text>
@@ -121,6 +122,7 @@ const Footer = () => {
               </Skeletonize>
             </Text>
           </Flex>
+          <span className="zzz-footer-code">KEEP IT ONLINE. / SC—01</span>
         </Flex>
       )}
     </motion.div>

@@ -21,7 +21,7 @@ const defaultThemeSettings = Object.fromEntries(
 );
 
 const withThemeDefaults = (publicInfo: PublicInfo): PublicInfo => {
-  if (publicInfo.theme !== "default") {
+  if (publicInfo.theme !== "default" && publicInfo.theme !== defaultTheme.short) {
     return publicInfo;
   }
 

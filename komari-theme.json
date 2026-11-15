@@ -1,17 +1,17 @@
 {
-  "name": "Komari",
-  "short": "default",
-  "description": "Komari default theme",
+  "name": "SIGNAL CONTROL",
+  "short": "signal-control",
+  "description": "绝区零风格监控主题：黑白灰、荧光黄绿、切角面板与个人背景 / A ZZZ-inspired monitoring theme with angular panels and personal wallpapers.",
   "version": "1.0.0",
-  "author": "Akizon77",
+  "author": "SIGNAL CONTROL · Based on Komari by Akizon77",
   "url": "https://github.com/komari-monitor/komari-web",
-  "preview": "dist/assets/edit_117847723_p0.webp",
+  "preview": "preview.svg",
   "configuration": {
     "type": "managed",
     "name": {
-      "en": "Default Theme Settings",
-      "zh-CN": "默认主题设置",
-      "ja": "デフォルトテーマ設定"
+      "en": "SIGNAL CONTROL Settings",
+      "zh-CN": "SIGNAL CONTROL 主题设置",
+      "ja": "SIGNAL CONTROL 設定"
     },
     "data": [
       {
@@ -80,6 +80,21 @@
           "en": "Set a custom background image for the homepage on mobile devices. If empty, the desktop background will be used.",
           "zh-CN": "为移动端首页设置自定义背景图片。如果为空，将使用桌面端背景。",
           "ja": "モバイルデバイスのホームページのカスタム背景画像を設定します。空の場合、デスクトップの背景が使用されます。"
+        }
+      },
+      {
+        "key": "backgroundImageOpacity",
+        "type": "number",
+        "default": 20,
+        "name": {
+          "en": "Background intensity (%)",
+          "zh-CN": "背景强度（%）",
+          "ja": "背景の強度（%）"
+        },
+        "help": {
+          "en": "Between 5 and 45. Personal browser settings take priority; reset them to use the site background.",
+          "zh-CN": "范围 5–45，默认 20。访客个人背景设置优先，恢复默认后使用站点背景。",
+          "ja": "5〜45、既定は20。ブラウザーの個人設定が優先されます。"
         }
       },
       {

@@ -1,3 +1,4 @@
+import { signalSeriesColor } from "./signalPalette";
 import { toMetricChartConfig } from "@/components/metricChartShared";
 import type { MetricSeries, PublicPingTask } from "@/types/metrics";
 import {
@@ -6,7 +7,6 @@ import {
   countMetricPoints,
   isPingMetric,
   metricChartBoundaryTicks,
-  metricSeriesColor,
   metricSeriesDataKey,
   metricSeriesKey,
   metricTags,
@@ -53,7 +53,7 @@ export const buildRowsFromMetricSeries = (
         stableKey,
         metricKey: series.metric_key,
         label,
-        color: metricSeriesColor(index),
+        color: signalSeriesColor(index),
         kind,
         pointCount: countMetricPoints(series),
         unit: series.unit,
@@ -108,7 +108,7 @@ export const buildRowsFromRealtime = (
               stableKey,
               metricKey,
               label: tagLabel ? `${metric.label} ${tagLabel}` : metric.label,
-              color: metricSeriesColor(renderSeries.length),
+              color: signalSeriesColor(renderSeries.length),
               kind: metric.kind,
               unit: metric.unit,
               tags: tagged.tags,
@@ -130,7 +130,7 @@ export const buildRowsFromRealtime = (
           stableKey,
           metricKey,
           label: metric.label,
-          color: metricSeriesColor(renderSeries.length),
+          color: signalSeriesColor(renderSeries.length),
           kind: metric.kind,
           unit: metric.unit,
         };
@@ -174,7 +174,7 @@ export const mergeBuiltChartData = (
     rows: sortMetricChartRows(Array.from(rows.values())),
     series: [...primary.series, ...addedSeries].map((series, index) => ({
       ...series,
-      color: metricSeriesColor(index),
+      color: signalSeriesColor(index),
     })),
   };
 };
@@ -223,7 +223,7 @@ export const prepareChartData = (
     series.push({
       ...item,
       yAxisId,
-      color: metricSeriesColor(series.length),
+      color: signalSeriesColor(series.length),
     });
   }
 

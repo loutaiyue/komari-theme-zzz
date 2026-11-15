@@ -1,75 +1,70 @@
-# Komari Web UI
+# SIGNAL CONTROL
 
-参与翻译Komari？
-- 直接提PR
+基于 [Komari Web](https://github.com/komari-monitor/komari-web) 开发的服务器监控主题。采用黑白灰、荧光黄绿和切角面板，支持桌面及手机布局、节点卡片与表格、详情图表和自定义背景。
 
-We use AI to assist with translations. If you find any issues, please let us know!
+![SIGNAL CONTROL 主题预览](preview.svg)
 
-How to contribute to Komari translations?
-- Directly PR
+## 安装
 
-## 开发环境配置
+1. 先安装并运行 [Komari](https://github.com/komari-monitor/komari)。
+2. 在本仓库的 **Releases** 页面下载 `signal-control-v1.0.0.zip`。请选择主题 ZIP 附件，GitHub 自动生成的 `Source code` 是源码包。
+3. 在 Komari 后台进入 **主题管理 → 上传主题**，上传 ZIP 并应用 **SIGNAL CONTROL**。
 
-> 我不是计科专业的，代码质量可能达不到平均水平，React是边学边写的，在此之前我从未接触过前端开发，请多包涵。
+主题由 Komari 提供服务，服务器无需额外运行 Node.js 或 Vite。建议将站点部署在独立域名或子域名的根路径。
 
-### 前置 Nodejs
+## 背景图片
 
-如果未安装，请访问 [Node.js 官网](https://nodejs.org/) 下载并安装。版本建议为 22 及以上。
+- **全站背景**：管理员在主题设置中分别填写桌面端、移动端图片 URL。移动端留空时使用桌面端图片。
+- **个人背景**：点击导航栏的图片按钮，选择本地 JPG、PNG 或 WebP，最大 20 MB。图片在浏览器处理和保存，不上传服务器，也不会影响其他访客。
+- **背景强度**：可调范围为 5–45%，默认 20%。个人设置优先；恢复默认后使用站点设置。
 
-### 安装依赖
+## 本地开发
 
-```bash
-npm install
+需要 Node.js 22 或更新版本，以及一个可访问的 Komari 后端。
+
+```sh
+npm ci
 ```
 
-> 所有指令均在项目根目录下执行
+复制 `.env.example` 为 `.env.development`，将 `VITE_API_TARGET` 设为后端地址，然后启动：
 
-### 修改API地址
-
-1. 复制 `.env.example` 文件并重命名为 `.env.development`。
-
-2. 修改 `.env.development` 文件中的 `VITE_API_TARGET` 为你的开发环境地址。
-
-### 启动开发服务器
-
-```bash
+```sh
 npm run dev
 ```
 
-### 构建
+运行主题测试及生产构建：
 
-```bash
+```sh
+npm run test:theme
 npm run build
 ```
 
-## 主题相关
+## 打包与发布
 
-如果你需要基于本项目进行二次开发，可以参考以下步骤：
+Windows PowerShell：
 
-1. 完成开发环境配置
+```powershell
+.\build-theme.ps1
+```
 
-> 如果你是在 Linux 系统下开发，可以直接运行脚本 `build-theme.sh` 快速生成主题包。
+Linux/macOS（需要 `zip`）：
 
-2. 修改 `komari-theme.json` 中的相关配置，具体可参考 [主题配置文件 | Komari](https://komari-document.pages.dev/dev/theme.html#%E4%B8%BB%E9%A2%98%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+```sh
+bash build-theme.sh
+```
 
-   `configuration` 会根据 `type` 复用 `data` 字段：
+安装包输出到 `release/`，ZIP 根目录包含：
 
-   - `managed`: `data` 为配置项数组，后台会生成主题设置表单。
-   - `raw`: `data` 为 HTML 字符串，后台会在主内容区域渲染该 HTML。
-   - `redirect`: `data` 为站内相对路径，以实际部署的站点根目录（如 `VITE_BASE_URL`）为基准；例如根目录为 `/` 时 `settings` 或 `../settings` 会导航到 `/settings`，根目录为 `/abc/` 时会导航到 `/abc/settings`。
+```text
+komari-theme.json
+preview.svg
+dist/
+```
 
-3. 发挥你的想象和创造力，设计并实现你独特的主题风格！
+GitHub Actions 会在推送或 Pull Request 时执行主题测试、构建并保存安装包。发布与清单版本一致的 Release（例如 `v1.0.0`）后，工作流会将安装包上传到该 Release。
 
-4. 构建主题
+更多背景设置和样式维护说明见 [SIGNAL-CONTROL.md](SIGNAL-CONTROL.md)。
 
-   ```bash
-   npm run build
-   ```
+## 致谢
 
-5. 生成的主题文件位于 `dist` 目录下，创建一个新的文件夹 `my-theme`（名称自定），将 `dist` 目录下复制到 `my-theme` 文件夹中。
-
-6. 将 `komari-theme.json` 文件复制到 `my-theme` 文件夹中。
-
-7. 将 `my-theme` 文件夹打包为 ZIP 文件。
-
-8. 在 Komari 的主题管理页面上传并应用你的自定义主题。
+基于 Akizon77 及 [Komari Web 贡献者](https://github.com/komari-monitor/komari-web/graphs/contributors) 的工作，保留原有 API、实时数据及后台管理功能。受《绝区零》视觉语言启发，主题不包含游戏官网角色、美术或品牌素材。

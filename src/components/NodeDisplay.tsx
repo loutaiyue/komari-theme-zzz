@@ -2,9 +2,6 @@ import React, { useState, useMemo, useRef, useEffect, Suspense } from "react";
 import {
   Flex,
   Text,
-  IconButton,
-  TextField,
-  SegmentedControl,
 } from "@radix-ui/themes";
 import { Search, Grid3X3, Table2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -50,6 +47,8 @@ interface NodeDisplayProps {
   loading?: boolean;
   /** live 数据第一次请求还没回来：卡片里的数值用小骨架 */
   liveLoading?: boolean;
+  /** A failed request can produce an empty list without deleting its groups. */
+  listError?: string | null;
 }
 
 const NodeDisplay: React.FC<NodeDisplayProps> = ({
@@ -57,8 +56,10 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({
   liveData,
   loading = false,
   liveLoading = false,
+  listError = null,
 }) => {
-  const [t] = useTranslation();
+  const [t, i18n] = useTranslation();
+  const zh = i18n.language.startsWith("zh");
   const [viewMode, setViewMode] = useLocalStorage<ViewMode>(
     "nodeViewMode",
     "grid",
@@ -82,19 +83,28 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({
     return Array.from(groupSet).sort();
   }, [nodes]);
 
-  // 判断是否显示分组选择器
-  const showGroupSelector = groups.length >= 1;
+  // Only reconcile against a populated successful response. The provider clears
+  // its error before retrying while its failed empty list is still present.
+  useEffect(() => {
+    if (!loading && !listError && nodes.length > 0 && selectedGroup !== "all" && !groups.includes(selectedGroup)) {
+      setSelectedGroup("all");
+    }
+  }, [groups, loading, listError, nodes.length, selectedGroup, setSelectedGroup]);
 
   // 键盘快捷键支持
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 按 "/" 键聚焦搜索框
-      if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const target = e.target as HTMLElement | null;
+      const editing = target?.closest("input, textarea, select, [contenteditable='true']");
+      const dialogOpen = document.querySelector("[role='dialog'][data-state='open'], dialog[open]");
+      // Keep typing and shortcuts inside dialogs independent of node search.
+      if (dialogOpen || (editing && target !== searchRef.current)) return;
+      if (e.key === "/" && !editing && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         searchRef.current?.focus();
       }
       // 按 Escape 键清空搜索
-      if (e.key === "Escape" && searchTerm) {
+      if (e.key === "Escape" && target === searchRef.current && searchTerm) {
         setSearchTerm("");
         searchRef.current?.blur();
       }
@@ -178,156 +188,63 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({
       与上方概览卡之间 section；工具栏（搜索/视图/分组）内部 group；
       工具栏 → 统计行 block；统计行是网格的说明，贴近网格（group）。左右边距由 main 提供。
     */
-    <div className="km-node-display w-full mt-km-section">
-      {/* 控制栏 */}
-      <Flex
-        direction={{ initial: "column", sm: "row" }}
-        justify="between"
-        align={{ initial: "stretch", sm: "center" }}
-        gap="2"
-        className="control-bar rounded-lg"
-      >
-        {/* 搜索框 */}
-        <Flex
-          align="center"
-          gap="2"
-          className="flex-1 max-w-md relative"
-          wrap="nowrap"
-        >
-          <TextField.Root
-            ref={searchRef}
-            placeholder={t("search.placeholder")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-box flex-1 pr-8 min-w-32"
-          >
-            <TextField.Slot>
-              <Search size={16} />
-            </TextField.Slot>
-          </TextField.Root>
-          {/*
-            control 层：清除按钮常驻，用 animate 在「有/无」两个姿态之间弹簧切换。
-            快速输入又删光时，缩放会从当前速度顺势反向，不会重新挂载闪一下。
-          */}
-          <motion.div
-            initial={false}
-            animate={
-              searchTerm
-                ? { opacity: 1, scale: 1 }
-                : { opacity: 0, scale: 0.6 }
-            }
-            transition={MOTION_SPRING.snappy}
-            className="absolute right-2 top-1/2 -translate-y-1/2"
-            style={{ pointerEvents: searchTerm ? "auto" : "none" }}
-            aria-hidden={!searchTerm}
-          >
-            <IconButton
-              tabIndex={searchTerm ? 0 : -1}
-              variant="ghost"
-              size="1"
-              className="h-6 w-6 search-clear-button"
-              onClick={() => {
-                setSearchTerm("");
-                searchRef.current?.focus();
-              }}
-              title={t("common.clear_search", "Clear search")}
-              aria-label={t("common.clear_search", "Clear search")}
-            >
-              <X size={12} />
-            </IconButton>
-          </motion.div>
-        </Flex>
-
-        {/* 视图模式切换 */}
-        <Flex align="center" gap="2">
-          <label className="whitespace-nowrap text-md text-muted-foreground">
-            {t("view.mode")}
-          </label>
-          {/*
-            分段控件式的视图切换：选中块是**同一个**元素在两个按钮之间滑动
-            （共享元素 / layoutId）。用 grid 让指示器与按钮处在同一坐标系，
-            这样它从旧位置滑到新位置时是真正的位移补间，而不是淡出再淡入。
-          */}
-          {/*
-            视图切换用 SegmentedControl：它自带「同一个指示块在两个选项之间滑动」的
-            共享元素过渡（transform 补间），与下方分组选择器的手感完全一致；
-            时长已在 global.css 里统一接到 --km-dur-base / --km-ease-emphasized。
-          */}
-          <SegmentedControl.Root
-            value={viewMode}
-            // 预取表格的代码块：真正切过去时多半已经加载好，不用再等骨架
-            onPointerEnter={() => void loadNodeTable()}
-            onFocus={() => void loadNodeTable()}
-            onValueChange={(value) => setViewMode(value as ViewMode)}
-            size="1"
-            className="km-view-switch"
-          >
+    <section id="nodes" className="km-node-display zzz-node-section" aria-labelledby="zzz-nodes-heading">
+      <div className="zzz-section-heading">
+        <span className="zzz-chapter" aria-hidden="true">01</span>
+        <h2 id="zzz-nodes-heading">{zh ? "节点网络" : "Node network"}<small>YOUR CONNECTED WORLD</small></h2>
+        <span className="zzz-section-rule" aria-hidden="true" />
+        <span className="zzz-section-meta"><strong>{loading ? "—" : String(filteredNodes.length).padStart(2, "0")}</strong> NODES</span>
+      </div>
+      <div className="zzz-node-toolbar">
+        <div className="zzz-node-filters" role="group" aria-label={t("common.group")}>
+          <button type="button" aria-pressed={selectedGroup === "all"} onClick={() => setSelectedGroup("all")}>
+            {t("common.all")} <span>{nodes.length}</span>
+          </button>
+          {groups.map((group) => (
+            <button type="button" key={group} aria-pressed={selectedGroup === group} onClick={() => setSelectedGroup(group)}>
+              {group} <span>{nodes.filter((node) => node.group === group).length}</span>
+            </button>
+          ))}
+        </div>
+        <div className="zzz-node-actions">
+          <div className="zzz-node-search">
+            <Search size={15} aria-hidden="true" />
+            <input
+              ref={searchRef}
+              type="search"
+              aria-label={t("search.placeholder")}
+              placeholder={t("search.placeholder")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm ? (
+              <button type="button" onClick={() => { setSearchTerm(""); searchRef.current?.focus(); }} aria-label={t("common.clear_search", "Clear search")}>
+                <X size={13} />
+              </button>
+            ) : <kbd aria-hidden="true">/</kbd>}
+          </div>
+          <div className="zzz-view-switch" role="group" aria-label={t("view.mode")}>
             {VIEW_MODES.map((mode) => {
               const Icon = mode.icon;
+              const label = mode.value === "grid" ? (zh ? "卡片视图" : "Grid view") : (zh ? "表格视图" : "Table view");
               return (
-                <SegmentedControl.Item
+                <button
+                  type="button"
                   key={mode.value}
-                  value={mode.value}
-                  aria-label={mode.label}
-                  className="km-view-switch-button"
-                >
-                  <span className="flex items-center justify-center">
-                    <Icon size={16} />
-                  </span>
-                </SegmentedControl.Item>
+                  aria-label={label}
+                  title={label}
+                  aria-pressed={viewMode === mode.value}
+                  onPointerEnter={mode.value === "table" ? () => void loadNodeTable() : undefined}
+                  onFocus={mode.value === "table" ? () => void loadNodeTable() : undefined}
+                  onClick={() => setViewMode(mode.value)}
+                ><Icon size={16} /></button>
               );
             })}
-          </SegmentedControl.Root>
-        </Flex>
-      </Flex>
-      {/* 分组选择器 */}
-      <AnimatePresence initial={false}>
-        {showGroupSelector && (
-          <motion.div
-            key="group-selector"
-            initial={{ opacity: 0, height: 0, y: -6 }}
-            animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -6 }}
-            transition={{
-              height: MOTION_SPRING.soft,
-              opacity: { duration: MOTION_DURATION.fast, ease: MOTION_EASE.standard },
-              y: MOTION_SPRING.soft,
-            }}
-            className="overflow-hidden"
-          >
-            <Flex
-              align="center"
-              gap="2"
-              // pt 放在会收起的容器里面：分组行消失时这段间距随高度一起收走
-              className="km-node-group pt-km-group overflow-x-auto"
-            >
-              <label className="whitespace-nowrap text-md text-muted-foreground">
-                {t("common.group")}
-              </label>
-              <SegmentedControl.Root
-                value={selectedGroup}
-                onValueChange={setSelectedGroup}
-                size="1"
-              >
-                <SegmentedControl.Item value="all">
-                  {t("common.all")}
-                </SegmentedControl.Item>
-                {groups.map((group) => (
-                  <SegmentedControl.Item
-                    key={group}
-                    value={group}
-                    className="km-node-group-name"
-                  >
-                    {group}
-                  </SegmentedControl.Item>
-                ))}
-              </SegmentedControl.Root>
-            </Flex>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      </div>
       {/* 搜索结果统计：数字变化时用等宽过渡，避免文字长度跳动 */}
-      <Flex justify="between" align="center" className="km-node-summary mt-km-block mb-km-group">
+      <Flex justify="between" align="center" className="km-node-summary zzz-node-caption">
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={searchTerm.trim() ? "search" : selectedGroup}
@@ -433,7 +350,7 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({
                 align="center"
                 justify="center"
                 gap="2"
-                className="py-km-hero"
+                className="zzz-node-empty"
               >
                 <Text size="4" color="gray">
                   {searchTerm.trim()
@@ -486,7 +403,7 @@ const NodeDisplay: React.FC<NodeDisplayProps> = ({
         </AnimatePresence>
       </div>
       </AutoHeight>
-    </div>
+    </section>
   );
 };
 

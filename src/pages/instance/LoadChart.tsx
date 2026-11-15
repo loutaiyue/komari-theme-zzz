@@ -51,7 +51,7 @@ type LoadChartProps = {
   - useMetricQueries：历史指标与延迟统计查询。
 */
 const LoadChart = ({ data = [], realtimeLoading = false, onRealtimeActiveChange }: LoadChartProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { uuid } = useParams<{ uuid: string }>();
   const { nodeList } = useNodeList();
   const node = nodeList?.find((item) => item.uuid === uuid);
@@ -82,6 +82,12 @@ const LoadChart = ({ data = [], realtimeLoading = false, onRealtimeActiveChange 
   return (
     // 图表区：时间范围 → 工具栏 → 图表网格之间 block；宽度铺满主列，左右边缘与页头信息卡对齐
     <Flex direction="column" gap="4" className="km-load-chart w-full min-w-0">
+      <div className="zzz-detail-section-heading">
+        <span className="zzz-detail-chapter" aria-hidden="true">02</span>
+        <h2>{t("signal.telemetry", { defaultValue: i18n.language.startsWith("zh") ? "信号追踪" : "Signal telemetry" })}<small>INSTANCE TELEMETRY</small></h2>
+        <span className="zzz-detail-section-rule" aria-hidden="true" />
+        <span className="zzz-detail-section-mode">{isRealtime ? "LIVE FEED" : "HISTORY"}</span>
+      </div>
       <TimeViewSelector
         timeViews={timeRange.timeViews}
         value={timeRange.selectedView.key}

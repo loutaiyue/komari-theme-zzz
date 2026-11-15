@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import "@/styles/signal-nodes.css";
 import {
   Table,
   TableBody,
@@ -98,7 +99,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
   }, []);
 
   const handleSort = useCallback((field: SortField) => {
-    return (event: React.MouseEvent) => {
+    return (event: React.MouseEvent | React.KeyboardEvent) => {
       event.preventDefault();
 
       setSortState((prev) => {
@@ -214,7 +215,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
   }), [nodes, onlineSet, getNodeData, offlineServerPosition, sortState]);
 
   return (
-    <div className="km-node-table overflow-x-auto rounded-xl node-table-container">
+    <div className="km-node-table zzz-node-table overflow-x-auto node-table-container">
       <Table>
         <TableHeader className="km-node-table-header">
           <TableRow>
@@ -222,6 +223,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="w-[200px] min-w-[150px] cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("name")}
+              tabIndex={0}
+              aria-sort={sortState.field === "name" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("name")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -232,6 +238,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("os")}
+              tabIndex={0}
+              aria-sort={sortState.field === "os" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("os")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -242,6 +253,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="max-w-[128px] cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("status")}
+              tabIndex={0}
+              aria-sort={sortState.field === "status" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("status")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -252,6 +268,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("cpu")}
+              tabIndex={0}
+              aria-sort={sortState.field === "cpu" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("cpu")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -262,6 +283,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("ram")}
+              tabIndex={0}
+              aria-sort={sortState.field === "ram" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("ram")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -272,6 +298,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("disk")}
+              tabIndex={0}
+              aria-sort={sortState.field === "disk" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("disk")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -282,6 +313,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none"
               onClick={handleSort("price")}
+              tabIndex={0}
+              aria-sort={sortState.field === "price" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("price")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1">
@@ -292,6 +328,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none text-center min-w-[80px]"
               onClick={handleSort("networkUp")}
+              tabIndex={0}
+              aria-sort={sortState.field === "networkUp" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("networkUp")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1" justify="center">
@@ -302,6 +343,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none text-center min-w-[80px]"
               onClick={handleSort("networkDown")}
+              tabIndex={0}
+              aria-sort={sortState.field === "networkDown" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("networkDown")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1" justify="center">
@@ -312,6 +358,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none text-center min-w-[80px]"
               onClick={handleSort("totalUp")}
+              tabIndex={0}
+              aria-sort={sortState.field === "totalUp" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("totalUp")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1" justify="center">
@@ -322,6 +373,11 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
             <TableHead
               className="cursor-pointer hover:bg-accent-2 select-none text-center min-w-[80px]"
               onClick={handleSort("totalDown")}
+              tabIndex={0}
+              aria-sort={sortState.field === "totalDown" ? (sortState.order === "asc" ? "ascending" : "descending") : "none"}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") handleSort("totalDown")(event);
+              }}
               title={t("nodeCard.sortTooltip")}
             >
               <Flex align="center" gap="1" justify="center">
@@ -358,6 +414,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
                 */}
                 <motion.tr
                   data-slot="table-row"
+                  data-status={liveLoading ? "loading" : isOnline ? "online" : "offline"}
                   layout="position"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -376,7 +433,8 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
                         variant="ghost"
                         size="1"
                         className="expand-button"
-                        aria-label="Expand row"
+                        aria-label={t(isExpanded ? "common.collapse" : "common.expand", isExpanded ? "Collapse row" : "Expand row")}
+                        aria-expanded={isExpanded}
                       >
                         {/* control 层：箭头用弹簧转向，连点展开/收起会顺势反转 */}
                         <motion.span
@@ -458,6 +516,7 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
                           color={liveLoading ? "gray" : isOnline ? "green" : "red"}
                           variant="soft"
                           size="1"
+                          className="zzz-node-status"
                         >
                           {liveLoading ? (
                             <Skeletonize as="span" loading>
@@ -489,19 +548,19 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
 
                   <TableCell>
                     <div className="w-[100px]">
-                      <UsageBar label="" value={nodeData.cpu.usage} compact loading={liveLoading} />
+                      <UsageBar label="" value={nodeData.cpu.usage} compact loading={liveLoading} unavailable={!isOnline && !liveLoading} />
                     </div>
                   </TableCell>
 
                   <TableCell>
                     <div className="w-[100px]">
-                      <UsageBar label="" value={memoryUsagePercent} compact loading={liveLoading} />
+                      <UsageBar label="" value={memoryUsagePercent} compact loading={liveLoading} unavailable={!isOnline && !liveLoading} />
                     </div>
                   </TableCell>
 
                   <TableCell>
                     <div className="w-[100px]">
-                      <UsageBar label="" value={diskUsagePercent} compact loading={liveLoading} />
+                      <UsageBar label="" value={diskUsagePercent} compact loading={liveLoading} unavailable={!isOnline && !liveLoading} />
                     </div>
                   </TableCell>
                   <TableCell>
@@ -515,10 +574,10 @@ const NodeTable: React.FC<NodeTableProps> = ({ nodes, liveData, onlineSet, liveL
                     />
                   </TableCell>
                   <TableCell className="text-center min-w-[80px]">
-                    <label>{sk(<>↑{formatBytes(nodeData.network.up)}/s</>)}</label>
+                    <label>{sk(isOnline ? <>↑{formatBytes(nodeData.network.up)}/s</> : "—")}</label>
                   </TableCell>
                   <TableCell className="text-center min-w-[80px]">
-                    <label>{sk(<>↓{formatBytes(nodeData.network.down)}/s</>)}</label>
+                    <label>{sk(isOnline ? <>↓{formatBytes(nodeData.network.down)}/s</> : "—")}</label>
                   </TableCell>
                   <TableCell className="text-center min-w-[80px]">
                     <label>{sk(<>↑{formatBytes(nodeData.network.totalUp)}</>)}</label>

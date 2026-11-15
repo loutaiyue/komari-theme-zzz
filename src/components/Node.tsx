@@ -1,13 +1,7 @@
 import React from "react";
+import "@/styles/signal-nodes.css";
 import { AnimatePresence, animate, motion, useMotionValue } from "motion/react";
-import {
-  Card,
-  Flex,
-  Text,
-  Badge,
-  Separator,
-  IconButton,
-} from "@radix-ui/themes";
+import { Card, Text, Badge, IconButton } from "@radix-ui/themes";
 import type { LiveData, Record } from "../types/LiveData";
 import UsageBar from "./UsageBar";
 import Flag from "./Flag";
@@ -35,7 +29,6 @@ interface NodeProps {
   basic: NodeBasicInfo;
   live: Record | undefined;
   online: boolean;
-  isMobile: boolean;
   showIpTagsInCard: boolean;
   /** live 数据的第一次请求还没回来：数值、状态画成与文字等宽的骨架条（不是 0 或「离线」） */
   liveLoading?: boolean;
@@ -48,7 +41,7 @@ interface NodeProps {
 }
 
 const Node = React.memo(
-  ({ basic, live, online, isMobile, showIpTagsInCard, liveLoading = false, orderSettled = true, index = 0, ref }: NodeProps) => {
+  ({ basic, live, online, showIpTagsInCard, liveLoading = false, orderSettled = true, index = 0, ref }: NodeProps) => {
   const [t] = useTranslation();
   /*
     进场参数只在挂载时取一次（Staging）：
@@ -83,7 +76,6 @@ const Node = React.memo(
   // 只有被点击的那张卡片会获得共享元素名（浏览器要求名字在文档内唯一）
   const isSharedHero = useSharedHero(basic.uuid);
   const liveData = live || EMPTY_LIVE_RECORD;
-  const osImage = React.useMemo(() => getOSImage(basic.os), [basic.os]);
   const osName = React.useMemo(() => getOSName(basic.os), [basic.os]);
 
   const memoryUsagePercent = basic.mem_total
@@ -136,266 +128,137 @@ const Node = React.memo(
       <Card
         style={{ width: "100%", height: "100%", margin: "0 auto" }}
         id={basic.uuid}
-        className="km-node-card node-card hover:cursor-pointer hover:shadow-lg hover:bg-accent-2"
+        data-status={liveLoading ? "loading" : online ? "online" : "offline"}
+        className="km-node-card node-card zzz-node-card"
       >
-          <Flex direction="column" gap="2">
-          <Flex justify="between" align="center">
-            <Flex justify="start" align="center" style={{ flex: 1, minWidth: 0 }} className="km-node-region">
-              <Flag flag={basic.region} />
-              <Link
-                to={`/instance/${basic.uuid}`}
-                style={{ flex: 1, minWidth: 0 }}
-                onClick={(event) => {
-                  // 共享元素跳转：卡片里的节点名会「飞」到详情页标题的位置
-                  if (
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.shiftKey ||
-                    event.altKey ||
-                    event.button !== 0
-                  ) {
-                    return;
-                  }
-                  event.preventDefault();
-                  navigateWithTransition(`/instance/${basic.uuid}`, {
-                    sharedHero: basic.uuid,
-                  });
-                }}
-              >
-                <Flex direction="column" style={{ minWidth: 0 }}>
-                  <Text
-                    className="km-node-name"
-                    weight="bold"
-                    size={isMobile ? "2" : "4"}
-                    truncate
-                    as="span"
-                    style={{
-                      maxWidth: "100%",
-                      // 共享元素的快照按盒子尺寸缩放：被 flex 拉满整行时盒子比文字宽很多，
-                      // 补间里文字会先缩成一小团。跳转那一刻让盒子贴合文字，与详情页标题同形
-                      ...(isSharedHero
-                        ? { width: "fit-content", alignSelf: "flex-start" }
-                        : null),
-                      ...sharedHeroStyle(isSharedHero),
-                    }}
-                  >
-                    {basic.name}
-                  </Text>
-                  <Text
-                    color="gray"
-                    hidden={!isMobile}
-                    style={{
-                      marginTop: "-3px",
-                      fontSize: "0.728rem",
-                    }}
-                    className="text-sm"
-                  >
-                    {sk(formatUptime(liveData.uptime, t), 8)}
-                  </Text>
-                  <PriceTags
-                    hidden={isMobile}
-                    price={basic.price}
-                    billing_cycle={basic.billing_cycle}
-                    expired_at={basic.expired_at}
-                    currency={basic.currency}
-                    tags={basic.tags}
-                    ip4={showIpTagsInCard ? basic.ipv4 : undefined}
-                    ip6={showIpTagsInCard ? basic.ipv6 : undefined}
-                  />
-                </Flex>
-              </Link>
-            </Flex>
-            <Flex gap="2" align="center" style={{ flex: "none" }} className="km-node-chart">
-              {/* feedback 层：节点消息出现/消失时弹一下，不硬切 */}
-              <AnimatePresence initial={false}>
-                {live?.message && (
-                  <motion.span
-                    key="message"
-                    className="inline-flex"
-                    initial={{ opacity: 0, scale: 0.86 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.86, transition: MOTION_TRANSITION.fadeOut }}
-                    transition={MOTION_SPRING.pop}
-                  >
-                    <Tips color="#CE282E">{live.message}</Tips>
-                  </motion.span>
-                )}
-              </AnimatePresence>
-              <MiniPingChartFloat
-                uuid={basic.uuid}
-                hours={24}
-                trigger={
-                  <IconButton
-                    variant="ghost"
-                    size="1"
-                    title={t("nodeCard.chart", "Chart")}
-                    aria-label={t("nodeCard.chart", "Chart")}
-                  >
-                    <TrendingUp size="14" />
-                  </IconButton>
-                }
-              />
-              {/* live 未到时不先显示「离线」再翻成「在线」：灰色徽标 + 骨架文字，到达后弹出真实状态 */}
-              <StatusFeedback state={liveLoading ? "loading" : online}>
-                <Badge
-                  color={liveLoading ? "gray" : online ? "green" : "red"}
-                  variant="soft"
-                  className="km-node-status"
+        <div className="zzz-node-top">
+          <span className="zzz-node-region"><Flag flag={basic.region} /></span>
+          <span className="zzz-node-index" title={basic.uuid}>
+            NODE / {String(index + 1).padStart(2, "0")}
+          </span>
+          <div className="zzz-node-controls">
+            <AnimatePresence initial={false}>
+              {live?.message && (
+                <motion.span
+                  key="message"
+                  className="inline-flex"
+                  initial={{ opacity: 0, scale: 0.86 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.86, transition: MOTION_TRANSITION.fadeOut }}
+                  transition={MOTION_SPRING.pop}
                 >
-                  {liveLoading ? (
-                    <Skeletonize as="span" loading>
-                      {t("nodeCard.online")}
-                    </Skeletonize>
-                  ) : online ? (
-                    t("nodeCard.online")
-                  ) : (
-                    t("nodeCard.offline")
-                  )}
-                </Badge>
-              </StatusFeedback>
-            </Flex>
-          </Flex>
-
-          <Separator size="4" />
-
-          <Flex direction="column" gap="2">
-            <Flex justify="between" hidden={isMobile}>
-              <Text size="2" color="gray">
-                OS
-              </Text>
-              <Flex align="center">
-                <img
-                  src={osImage}
-                  alt={basic.os}
-                  className="w-5 h-5 mr-2"
-                />
-                <Text size="2">
-                  {osName} / {basic.arch}
-                </Text>
-              </Flex>
-            </Flex>
-            {/*
-              每个指标的「名称行 + 进度条 + (x / y) 附注」是一组（inline），指标之间与卡片其它行一致（group）。
-              窄屏三个指标横排，彼此之间 block。
-            */}
-            <Flex className="md:flex-col flex-row md:gap-km-group gap-km-block">
-              {/* CPU Usage */}
-              <UsageBar label={t("admin.nodeDetail.cpu")} value={liveData.cpu.usage} loading={liveLoading} />
-
-              {/* Memory Usage */}
-              <Flex direction="column" gap="1" className="w-full">
-                <UsageBar label={t("nodeCard.ram")} value={memoryUsagePercent} loading={liveLoading} />
-                <Text className="md:block hidden" size="1" color="gray">
-                  ({sk(formatBytes(liveData.ram.used), 4)} / {formatBytes(basic.mem_total)}
-                  )
-                </Text>
-              </Flex>
-
-              {/* Disk Usage */}
-              <Flex direction="column" gap="1" className="w-full">
-                <UsageBar label={t("nodeCard.disk")} value={diskUsagePercent} loading={liveLoading} />
-                <Text size="1" className="md:block hidden" color="gray">
-                  ({sk(formatBytes(liveData.disk.used), 4)} /{" "}
-                  {formatBytes(basic.disk_total)})
-                </Text>
-              </Flex>
-            </Flex>
-            {basic.traffic_limit > 0 ? (
-              <Flex justify="between" hidden={isMobile} direction="column" gap="1">
-                <UsageBar
-                  label={t("nodeCard.totalTraffic")}
-                  value={getTrafficPercentage(
-                    liveData.network.totalUp,
-                    liveData.network.totalDown,
-                    basic.traffic_limit,
-                    basic.traffic_limit_type ?? "sum",
-                  )}
-                  max={Infinity}
-                  loading={liveLoading}
-                />
-                <Flex wrap="nowrap" justify="between">
-                  <Text size="1" className="md:block hidden" color="gray">
-                    {sk(<>↑ {totalUpload} ↓ {totalDownload}</>, 14)}
-                  </Text>
-                  <Text size="1" className="md:block hidden" color="gray">
-                    {basic.traffic_limit_type &&
-                      basic.traffic_limit_type.charAt(0).toUpperCase() +
-                        basic.traffic_limit_type.slice(1)}
-                    ({formatBytes(basic.traffic_limit)})
-                  </Text>
-                </Flex>
-              </Flex>
-            ) : (
-              <Flex justify="between" hidden={isMobile}>
-                <Text size="2" color="gray">
-                  {t("nodeCard.totalTraffic")}
-                </Text>
-                <Text size="2">
-                  {sk(<>↑ {totalUpload} ↓ {totalDownload}</>, 14)}
-                </Text>
-              </Flex>
-            )}
-
-            <Flex justify="between" hidden={isMobile}>
-              <Text size="2" color="gray" className="flex items-center">
-                {t("nodeCard.networkSpeed")}
-              </Text>
-              <Text size="2">
-                {sk(<>↑ {uploadSpeed}/s ↓ {downloadSpeed}/s</>, 14)}
-              </Text>
-            </Flex>
-
-            <Flex justify="between" gap="2" hidden={!isMobile}>
-              <Text size="2">{t("nodeCard.networkSpeed")}</Text>
-              <Text size="2">
-                {sk(<>↑ {uploadSpeed}/s ↓ {downloadSpeed}/s</>, 14)}
-              </Text>
-            </Flex>
-            <Flex justify="between" gap="2" hidden={!isMobile}>
-              <Text size="2">{t("nodeCard.totalTraffic")}</Text>
-              <Flex direction="column">
-                <Text size="2">
-                  {sk(<>↑ {totalUpload} ↓ {totalDownload}</>, 14)}
-                </Text>
-              </Flex>
-            </Flex>
-            {basic.traffic_limit > 0 && isMobile && (
-              <UsageBar
-                label={`${basic.traffic_limit_type && basic.traffic_limit_type.charAt(0).toUpperCase() + basic.traffic_limit_type.slice(1)}(${formatBytes(basic.traffic_limit)})`}
-                max={Infinity}
-                value={getTrafficPercentage(
-                  liveData.network.totalUp,
-                  liveData.network.totalDown,
-                  basic.traffic_limit,
-                  basic.traffic_limit_type ?? "sum",
-                )}
-                loading={liveLoading}
-              />
-            )}
-            <Flex justify="between" hidden={isMobile}>
-              <Text size="2" color="gray">
-                {t("nodeCard.uptime")}
-              </Text>
-              {liveLoading ? (
-                <Text size="2">{sk(null, 10)}</Text>
-              ) : online ? (
-                <Text size="2">{formatUptime(liveData.uptime, t)}</Text>
-              ) : (
-                <Text size="2" color="gray">
-                  -
-                </Text>
+                  <Tips color="#CE282E">{live.message}</Tips>
+                </motion.span>
               )}
-            </Flex>
-          </Flex>
-            <PriceTags
-              hidden={!isMobile}
-              price={basic.price}
-              billing_cycle={basic.billing_cycle}
-              expired_at={basic.expired_at}
-              currency={basic.currency}
-              tags={basic.tags || ""}
+            </AnimatePresence>
+            <MiniPingChartFloat
+              uuid={basic.uuid}
+              hours={24}
+              trigger={
+                <IconButton
+                  variant="ghost"
+                  size="1"
+                  title={t("nodeCard.chart", "Chart")}
+                  aria-label={t("nodeCard.chart", "Chart")}
+                >
+                  <TrendingUp size="14" />
+                </IconButton>
+              }
             />
-          </Flex>
+          </div>
+          <StatusFeedback state={liveLoading ? "loading" : online}>
+            <Badge
+              color={liveLoading ? "gray" : online ? "green" : "red"}
+              variant="soft"
+              className="km-node-status zzz-node-status"
+              title={liveLoading ? undefined : t(online ? "nodeCard.online" : "nodeCard.offline")}
+              aria-label={liveLoading ? undefined : t(online ? "nodeCard.online" : "nodeCard.offline")}
+            >
+              {liveLoading ? (
+                <Skeletonize as="span" loading>{skeletonText(6)}</Skeletonize>
+              ) : online ? "ONLINE" : "OFFLINE"}
+            </Badge>
+          </StatusFeedback>
+        </div>
+
+        <Link
+          to={`/instance/${basic.uuid}`}
+          className="zzz-node-link"
+          title={basic.name}
+          onClick={(event) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+            event.preventDefault();
+            navigateWithTransition(`/instance/${basic.uuid}`, { sharedHero: basic.uuid });
+          }}
+        >
+          <Text
+            className="km-node-name"
+            weight="bold"
+            size="4"
+            truncate
+            as="span"
+            style={{
+              maxWidth: "100%",
+              ...(isSharedHero ? { width: "fit-content", alignSelf: "flex-start" } : null),
+              ...sharedHeroStyle(isSharedHero),
+            }}
+          >
+            {basic.name}
+          </Text>
+          <ArrowUpRight size={15} aria-hidden="true" />
+        </Link>
+        <div className="zzz-node-spec" title={`${basic.os} / ${basic.arch} / ${basic.cpu_name}`}>
+          <span>{osName}</span><span>/</span><span>{basic.cpu_cores} vCPU</span><span>/</span>
+          <span>{formatBytes(basic.mem_total)}</span><span>/</span><span>{formatBytes(basic.disk_total)}</span>
+        </div>
+
+        <div className="zzz-node-metrics">
+          <UsageBar label="CPU" value={liveData.cpu.usage} loading={liveLoading} unavailable={!online && !liveLoading} />
+          <div title={`${t("nodeCard.ram")}: ${formatBytes(liveData.ram.used)} / ${formatBytes(basic.mem_total)}`}>
+            <UsageBar label="RAM" value={memoryUsagePercent} loading={liveLoading} unavailable={!online && !liveLoading} />
+          </div>
+          <div title={`${t("nodeCard.disk")}: ${formatBytes(liveData.disk.used)} / ${formatBytes(basic.disk_total)}`}>
+            <UsageBar label="DISK" value={diskUsagePercent} loading={liveLoading} unavailable={!online && !liveLoading} />
+          </div>
+        </div>
+        <div className="zzz-node-capacities">
+          <span>RAM {sk(online ? formatBytes(liveData.ram.used) : "—", 4)} / {formatBytes(basic.mem_total)}</span>
+          <span>DISK {sk(online ? formatBytes(liveData.disk.used) : "—", 4)} / {formatBytes(basic.disk_total)}</span>
+        </div>
+
+        <div className="zzz-node-traffic">
+          <span title={t("nodeCard.networkDownloadSpeed")}><b>↓</b>{sk(online ? `${downloadSpeed}/s` : "—", 9)}</span>
+          <span title={t("nodeCard.networkUploadSpeed")}><b>↑</b>{sk(online ? `${uploadSpeed}/s` : "—", 9)}</span>
+        </div>
+        <div className="zzz-node-transfer">
+          <span>{t("nodeCard.totalTraffic")}</span>
+          <span>{sk(<>↓ {totalDownload} <span className="zzz-node-transfer-divider">/</span> ↑ {totalUpload}</>, 14)}</span>
+        </div>
+        {basic.traffic_limit > 0 && (
+          <div className="zzz-node-quota">
+            <UsageBar
+              label={`${(basic.traffic_limit_type ?? "sum").toUpperCase()} / ${formatBytes(basic.traffic_limit)}`}
+              value={getTrafficPercentage(liveData.network.totalUp, liveData.network.totalDown, basic.traffic_limit, basic.traffic_limit_type ?? "sum")}
+              max={Infinity}
+              loading={liveLoading}
+            />
+          </div>
+        )}
+        <div className="zzz-node-bottom">
+          <span className="zzz-node-tag" title={basic.group || basic.arch}>{basic.group || basic.arch || "INSTANCE"}</span>
+          <span className="zzz-node-uptime" title={t("nodeCard.uptime")}>
+            {sk(online ? <>UP / {formatUptime(liveData.uptime, t)}</> : "NO SIGNAL", 9)}
+          </span>
+        </div>
+        <PriceTags
+          price={basic.price}
+          billing_cycle={basic.billing_cycle}
+          expired_at={basic.expired_at}
+          currency={basic.currency}
+          tags={basic.tags}
+          ip4={showIpTagsInCard ? basic.ipv4 : undefined}
+          ip6={showIpTagsInCard ? basic.ipv6 : undefined}
+        />
       </Card>
       </motion.div>
     </motion.div>
@@ -446,18 +309,16 @@ export const createPlaceholderNodes = (count: number): NodeBasicInfo[] =>
   }));
 
 import { Link } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
 import type { NodeBasicInfo } from "@/contexts/NodeListContext";
 import PriceTags from "./PriceTags";
-import { TrendingUp } from "lucide-react";
+import { ArrowUpRight, TrendingUp } from "lucide-react";
 import MiniPingChartFloat from "./MiniPingChartFloat";
-import { getOSImage, getOSName } from "@/utils";
+import { getOSName } from "@/utils";
 import { usePublicInfo } from "@/contexts/PublicInfoContext";
 export const NodeGrid = ({ nodes, liveData, onlineSet, liveLoading = false }: NodeGridProps) => {
   const { publicInfo, isLoading: publicInfoLoading } = usePublicInfo();
   // 顺序依赖实时状态和「离线节点位置」设置：两者都到了才算定序完成
   const orderSettled = useOrderSettled(!liveLoading && !publicInfoLoading);
-  const isMobile = useIsMobile();
   const showIpTagsInCard = Boolean(
     publicInfo?.theme_settings?.showIpTagsInCard,
   );
@@ -477,11 +338,10 @@ export const NodeGrid = ({ nodes, liveData, onlineSet, liveLoading = false }: No
     */
     <div
       // 同类卡片之间 block；左右边距由 _layout 的 main 提供，网格自身不加 padding
-      className="km-node-list gap-km-block"
+      className="km-node-list zzz-node-grid gap-km-block"
       style={{
         position: "relative",
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
         width: "100%",
         boxSizing: "border-box",
       }}
@@ -503,7 +363,6 @@ export const NodeGrid = ({ nodes, liveData, onlineSet, liveLoading = false }: No
               basic={node}
               live={nodeData}
               online={isOnline}
-              isMobile={isMobile}
               showIpTagsInCard={showIpTagsInCard}
               liveLoading={liveLoading}
               orderSettled={orderSettled}

@@ -87,7 +87,7 @@ export const DetailsGrid = ({
     >
       <Skeletonize loading={nodeLoading}>
       <div
-        className={`flex flex-wrap gap-${gap ?? "km-block"} basis-full justify-center ${
+        className={`zzz-details-fields flex flex-wrap gap-${gap ?? "km-block"} basis-full justify-center ${
           align === "center" ? "justify-between" : ""
         }`}
       >
@@ -97,7 +97,7 @@ export const DetailsGrid = ({
         >
           <UpDownStack
             up="CPU"
-            down={node ? `${node.cpu_name} (x${node.cpu_cores})` : skeletonText(22)}
+            down={node ? `${node.cpu_name} (x${node.cpu_cores})` : nodeText(undefined, 22)}
           />
         </motion.div>
         <motion.label
@@ -173,7 +173,7 @@ export const DetailsGrid = ({
         >
           <UpDownStack
             up={t("nodeCard.ram")}
-            down={node ? formatBytes(node.mem_total || 0) : skeletonText(7)}
+            down={node ? formatBytes(node.mem_total || 0) : nodeText(undefined, 7)}
           />
         </motion.div>
         <motion.div
@@ -183,7 +183,7 @@ export const DetailsGrid = ({
           <UpDownStack
             up={t("nodeCard.swap")}
             align={stackAlign}
-            down={node ? formatBytes(node.swap_total || 0) : skeletonText(7)}
+            down={node ? formatBytes(node.swap_total || 0) : nodeText(undefined, 7)}
           />
         </motion.div>
         <motion.div
@@ -192,10 +192,10 @@ export const DetailsGrid = ({
         >
           <UpDownStack
             up={t("nodeCard.disk")}
-            down={node ? formatBytes(node.disk_total || 0) : skeletonText(7)}
+            down={node ? formatBytes(node.disk_total || 0) : nodeText(undefined, 7)}
           />
         </motion.div>
-        <div className="flex-[0_0_calc(50%-var(--space-4)/2)]" />
+        <div className="zzz-details-spacer flex-[0_0_calc(50%-var(--space-4)/2)]" />
         <motion.div
           className="km-details-item flex-[0_0_calc(50%-var(--space-4)/2)]"
           {...itemMotion(9)}

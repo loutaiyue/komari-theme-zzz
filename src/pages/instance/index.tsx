@@ -20,9 +20,12 @@ import { useViewTransitionActive } from "@/lib/viewTransitionState";
 import { Skeletonize, skeletonText } from "@/components/ui/skeleton";
 import { api } from "@/lib/http";
 import { useOrderSettled } from "@/hooks/useOrderSettled";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import "@/styles/signal-details.css";
 
 export default function InstancePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isChinese = i18n.language.startsWith("zh");
   const navigate = useNavigate();
   const { onRefresh, live_data } = useLiveData();
   const { uuid } = useParams<{ uuid: string }>();
@@ -71,6 +74,25 @@ export default function InstancePage() {
     () => new Set(live_data?.data?.online ?? []),
     [live_data?.data?.online],
   );
+  const isOnline = !!uuid && onlineSet.has(uuid);
+  const currentRecord = uuid ? live_data?.data.data[uuid] : undefined;
+  const clampPercent = (value: number | undefined) =>
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.max(0, Math.min(100, value))
+      : null;
+  const resourceMetrics = [
+    { label: "CPU", caption: "PROCESSOR LOAD", value: clampPercent(currentRecord?.cpu.usage) },
+    {
+      label: "RAM", caption: "MEMORY USAGE",
+      value: node?.mem_total && currentRecord
+        ? clampPercent(currentRecord.ram.used / node.mem_total * 100) : null,
+    },
+    {
+      label: "DISK", caption: "STORAGE USAGE",
+      value: node?.disk_total && currentRecord
+        ? clampPercent(currentRecord.disk.used / node.disk_total * 100) : null,
+    },
+  ];
   const chartRecords = useMemo(
     () => liveDataToRecords(uuid ?? "", recent),
     [uuid, recent],
@@ -198,17 +220,18 @@ export default function InstancePage() {
           className="km-instance-server-list shrink-0 self-start sticky top-4"
           // 只在展开/收起途中裁切；静止后恢复 visible，卡片阴影不被切掉
           initial={{ width: 0, opacity: 0, overflow: "hidden" }}
-          animate={{ width: 300, opacity: 1, transitionEnd: { overflow: "visible" } }}
+          animate={{ width: 240, opacity: 1, transitionEnd: { overflow: "visible" } }}
           exit={{ width: 0, opacity: 0, overflow: "hidden" }}
           transition={{ width: MOTION_SPRING.soft, opacity: SURFACE_MOTION.fade }}
         >
-          <div className="w-[300px]">
+          <div className="w-[240px]">
           <Card
             className="km-instance-server-list-card w-full overflow-hidden shadow-lg"
-            style={{ height: "calc(100vh - 2rem)" }}
+            style={{ maxHeight: "calc(100dvh - 7rem)" }}
           >
             <Flex direction="column" gap="0" className="h-full min-h-0">
               <div className="km-instance-server-list-header p-3 border-b border-accent-3">
+                <span className="zzz-instance-index" aria-hidden="true">INDEX /</span>
                 <Text size="2" weight="bold">
                   {t("common.serverList")}
                 </Text>
@@ -251,6 +274,10 @@ export default function InstancePage() {
                           role="link"
                           tabIndex={0}
                           onClick={() => navigate(`/instance/${node.uuid}`)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter") navigate(`/instance/${node.uuid}`);
+                          }}
+                          aria-current={node.uuid === uuid ? "page" : undefined}
                           className={`km-instance-server-item relative mx-1 my-0.5 px-2 py-0 cursor-pointer text-sm rounded-md flex items-center gap-2 ${
                             node.uuid === uuid
                               ? "text-accent-10 font-bold"
@@ -318,6 +345,15 @@ export default function InstancePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={SURFACE_MOTION.enter.transition}
         >
+          <div className="zzz-instance-kicker">
+            <button type="button" onClick={() => navigate("/")}>
+              <ArrowLeft size={14} aria-hidden="true" />
+              {t("signal.backToNodes", { defaultValue: isChinese ? "返回节点总览" : "Back to nodes" })}
+            </button>
+            <span>NODE ARCHIVE / SIGNAL CONTROL</span>
+          </div>
+          <div className="zzz-instance-heading">
+          <span className="zzz-detail-chapter" aria-hidden="true">01</span>
           {/* 旗帜自带 m-2：去掉它的左外边距，标题左边缘与下方信息卡、图表区对齐 */}
           <h1 className="km-instance-title flex items-center flex-wrap [&_.km-flag]:ml-0">
             <Skeletonize as="span" loading={nodeLoading} className="inline-flex">
@@ -335,15 +371,32 @@ export default function InstancePage() {
                 {node?.name ?? (nodeLoading ? skeletonText(10) : uuid)}
               </Skeletonize>
             </Text>
-            <Text
-              size="1"
-              ml="2"
-              className="text-accent-6"
-              wrap="nowrap"
-            >
-              {node?.uuid}
-            </Text>
           </h1>
+          <span
+            className="zzz-instance-status"
+            data-online={isOnline}
+            data-pending={live_data === null}
+          >
+            <i aria-hidden="true" />
+            {live_data === null ? "CONNECTING" : isOnline ? "ONLINE" : "OFFLINE"}
+          </span>
+          </div>
+          <div className="zzz-instance-id">
+            <span>{node?.uuid ?? uuid}</span>
+            <span>{node?.group || "SERVER INSTANCE"} <ArrowUpRight size={13} aria-hidden="true" /></span>
+          </div>
+          <div className="zzz-instance-metrics">
+            {resourceMetrics.map((metric) => {
+              const value = isOnline ? metric.value : null;
+              return (
+                <div className="zzz-instance-metric" key={metric.label} data-alert={value !== null && value >= 85}>
+                  <div className="zzz-instance-metric-label"><span>{metric.label}</span><small>{metric.caption}</small></div>
+                  <div className="zzz-instance-metric-value">{value === null ? "—" : value.toFixed(1)}<small>%</small></div>
+                  <div className="zzz-instance-meter" aria-hidden="true"><span style={{ width: `${value ?? 0}%` }} /></div>
+                </div>
+              );
+            })}
+          </div>
           <DetailsGrid
             box
             fullWidth

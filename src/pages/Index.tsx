@@ -1,6 +1,5 @@
 import {
   Callout,
-  Card,
   Flex,
   Text,
   Popover,
@@ -17,7 +16,7 @@ import { formatBytes, formatSpeed } from "@/utils/unitHelper";
 import { useLiveData } from "../contexts/LiveDataContext";
 import { useNodeList } from "@/contexts/NodeListContext";
 import Loading from "@/components/loading";
-import { Settings } from "lucide-react";
+import { Settings, Radio, ArrowUpRight } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import type { LiveData } from "@/types/LiveData";
 import { AnimatePresence, motion } from "motion/react";
@@ -30,6 +29,7 @@ import {
 import { useKmReducedMotion } from "@/components/motion/MotionProvider";
 import { AnimatedNumber, AutoHeight, Collapse } from "@/components/motion";
 import { Skeletonize, skeletonText } from "@/components/ui/skeleton";
+import "@/styles/signal-home.css";
 
 
 
@@ -49,7 +49,8 @@ type StatusCardKey = keyof typeof STATUS_CARD_VISIBILITY_DEFAULTS;
 const ERROR_LINGER_MS = 1500;
 
 const Index = () => {
-  const [t] = useTranslation();
+  const [t, i18n] = useTranslation();
+  const zh = i18n.language.startsWith("zh");
   const { live_data, showCallout } = useLiveData();
   const { nodeList, isLoading, error, refresh } = useNodeList();
   // 节点列表未到：卡片区用占位卡片的骨架；live 未到（且还没判定连接失败）：数值用小骨架
@@ -68,6 +69,7 @@ const Index = () => {
     () => new Set(liveData.online),
     [liveData.online],
   );
+  const onlineCount = (nodeList ?? []).filter((node) => onlineSet.has(node.uuid)).length;
   const [statusCardsVisibility, setStatusCardsVisibility] = useLocalStorage<
     Record<StatusCardKey, boolean>
   >("statusCardsVisibility", STATUS_CARD_VISIBILITY_DEFAULTS);
@@ -94,19 +96,15 @@ const Index = () => {
 
     return {
       regionCount: regions.size,
-      trafficText: `↑ ${formatBytes(totalUp)} / ↓ ${formatBytes(totalDown)}`,
-      speedText: `↑ ${formatSpeed(speedUp)} / ↓ ${formatSpeed(speedDown)}`,
+      totalUp: formatBytes(totalUp),
+      totalDown: formatBytes(totalDown),
+      speedUp: formatSpeed(speedUp),
+      speedDown: formatSpeed(speedDown),
     };
   }, [liveData.data, nodeList, onlineSet]);
 
   const statusCards = useMemo(
     () => [
-      {
-        key: "currentTime" as const,
-        title: t("current_time"),
-        value: <CurrentTimeValue />,
-        visible: statusCardsVisibility.currentTime,
-      },
       {
         key: "currentOnline" as const,
         title: t("current_online"),
@@ -117,7 +115,7 @@ const Index = () => {
               skeletonText(5)
             ) : (
               <>
-                <AnimatedNumber value={onlineSet.size} duration={MOTION_DURATION.slower} /> /{" "}
+                <AnimatedNumber value={onlineCount} duration={MOTION_DURATION.slower} /> /{" "}
                 {nodeList?.length ?? 0}
               </>
             )}
@@ -140,11 +138,17 @@ const Index = () => {
         visible: statusCardsVisibility.regionOverview,
       },
       {
+        key: "currentTime" as const,
+        title: t("current_time"),
+        value: <CurrentTimeValue />,
+        visible: statusCardsVisibility.currentTime,
+      },
+      {
         key: "trafficOverview" as const,
         title: t("traffic_overview"),
         value: (
           <Skeletonize as="span" loading={statsLoading}>
-            {statsLoading ? skeletonText(16) : summaryStats.trafficText}
+            {statsLoading ? skeletonText(16) : <><span>↓ {summaryStats.totalDown}</span><small>↑ {summaryStats.totalUp}</small></>}
           </Skeletonize>
         ),
         visible: statusCardsVisibility.trafficOverview,
@@ -154,13 +158,13 @@ const Index = () => {
         title: t("network_speed"),
         value: (
           <Skeletonize as="span" loading={statsLoading}>
-            {statsLoading ? skeletonText(18) : summaryStats.speedText}
+            {statsLoading ? skeletonText(18) : <><span>↓ {summaryStats.speedDown}</span><small>↑ {summaryStats.speedUp}</small></>}
           </Skeletonize>
         ),
         visible: statusCardsVisibility.networkSpeed,
       },
     ],
-    [nodeList?.length, onlineSet.size, statsLoading, statusCardsVisibility, summaryStats, t],
+    [nodeList?.length, onlineCount, statsLoading, statusCardsVisibility, summaryStats, t],
   );
 
   const visibleStatusCards = useMemo(
@@ -214,13 +218,42 @@ const Index = () => {
   return (
     <>
       <Callouts />
+      <div className="zzz-eyebrow" aria-hidden="true">
+        <span><span className="zzz-tiny-cross">+</span> KOMARI NETWORK <b>/</b> <strong>CONTROL CENTER</strong></span>
+        <span className="zzz-edition">SIGNAL CONTROL / MONITORING SYSTEM</span>
+      </div>
+      <section className="zzz-hero" aria-labelledby="zzz-hero-heading">
+        <div className="zzz-hero-main">
+          <div className="zzz-hero-kicker"><span className="zzz-mini-tag">LIVE</span> YOUR NETWORK. YOUR SIGNAL.</div>
+          <h1 id="zzz-hero-heading" className="zzz-hero-title">KEEP IT <span>ONLINE.</span></h1>
+          <div className="zzz-hero-baseline">
+            <p>{zh ? "所有信号，尽在掌握。" : "Every signal. Under control."}</p>
+            <span>{zh ? "连接每个节点，掌握每一刻。" : "Every node. Every moment."}</span>
+          </div>
+          <span className="zzz-hero-decor" aria-hidden="true">01</span>
+        </div>
+        <aside className="zzz-uplink" aria-label={zh ? "节点在线概况" : "Node availability"}>
+          <div className="zzz-uplink-top"><span>NETWORK UPLINK</span><ArrowUpRight size={14} aria-hidden="true" /></div>
+          <div className="zzz-uplink-center">
+            <div className="zzz-radar" aria-hidden="true"><Radio size={27} /><i /></div>
+            <div>
+              <div className="zzz-uplink-number">{statsLoading || !live_data || !showCallout || !nodeList?.length ? "—" : ((onlineCount / nodeList.length) * 100).toFixed(1)}<span>%</span></div>
+              <div className="zzz-uplink-subtitle">{zh ? "当前节点在线率" : "CURRENT NODE AVAILABILITY"}</div>
+            </div>
+          </div>
+          <div className="zzz-uplink-bottom">
+            <span>{live_data === null ? (showCallout ? "CONNECTING…" : "CONNECTION LOST") : showCallout ? `${String(onlineCount).padStart(2, "0")} / ${String(nodeList?.length ?? 0).padStart(2, "0")} NODES ONLINE` : "CONNECTION LOST"}</span>
+            <span className="zzz-signal-bars" data-connected={showCallout && live_data !== null} aria-hidden="true"><i /><i /><i /><i /></span>
+          </div>
+        </aside>
+      </section>
       {/*
         首页区块之间统一 section：提示条各自带 mb（收起时随高度一起收走），后面的区块用 mt。
         左右边距由 _layout 的 main 提供，区块自身不再加 mx。
       */}
-      <Card className="km-page-index km-summary-card summary-card md:text-base text-sm relative">
+      <section className="km-page-index km-summary-card summary-card zzz-summary" aria-label={zh ? "网络概览" : "Network overview"}>
         {/* z-index：设置按钮必须浮在状态卡片之上，否则会被卡片内容拦截点击 */}
-        <div className="km-summary-card-settings absolute top-2 right-2 z-10">
+        <div className="km-summary-card-settings">
           <Popover.Root>
             <Popover.Trigger>
               <IconButton
@@ -261,11 +294,7 @@ const Index = () => {
         {/* 显隐某张状态卡导致行数变化时，卡片外框高度弹簧过渡（只在动画期间裁切） */}
         <AutoHeight threshold={4}>
         <div
-          className="km-summary-card-grid relative z-0 grid gap-x-km-block gap-y-km-group"
-          style={{
-            gridTemplateColumns: `repeat(auto-fit, minmax(230px, 1fr))`,
-            gridAutoRows: "min-content",
-          }}
+          className="km-summary-card-grid zzz-summary-grid"
         >
           <AnimatePresence initial={false} mode="popLayout">
             {visibleStatusCards.map((card, index) => (
@@ -274,12 +303,13 @@ const Index = () => {
                 title={card.title}
                 value={card.value}
                 index={index}
+                metricKey={card.key}
               />
             ))}
           </AnimatePresence>
         </div>
         </AutoHeight>
-      </Card>
+      </section>
       {/* 拉取节点失败：提示条展开在列表上方（停留一会儿再收起，轮询重试不会让它反复开合） */}
       <Collapse open={!!shownError} aria-hidden={!shownError}>
         <Callout.Root color="red" mt="5" className="km-callout km-callout-nodes-error">
@@ -300,6 +330,7 @@ const Index = () => {
           liveData={liveData}
           loading={listLoading}
           liveLoading={liveLoading}
+          listError={shownError || error}
         />
       </Suspense>
     </>
@@ -399,12 +430,13 @@ type TopCardProps = {
   description?: string;
   /** 用于错峰进场（Follow-through：先到的主卡，后到的副卡） */
   index?: number;
+  metricKey: StatusCardKey;
   /** React 19：memo 组件以 prop 接收 ref，AnimatePresence popLayout 靠它测量退场卡片 */
   ref?: React.Ref<HTMLDivElement>;
 };
 
 const TopCard: React.FC<TopCardProps> = React.memo(
-  ({ title, value, description, index = 0, ref }) => {
+  ({ title, value, description, index = 0, metricKey, ref }) => {
     const reduced = useKmReducedMotion();
     // 错峰只取挂载时的序号；之后其它卡片显隐导致序号变化，不会改动已入场卡片的过渡
     const [delay] = React.useState(() =>
@@ -415,7 +447,8 @@ const TopCard: React.FC<TopCardProps> = React.memo(
         ref={ref}
         // content 层：显隐某张状态卡时，其余卡片只补间位置（文字不被拉伸）
         layout="position"
-        className="km-top-card min-w-52 md:max-w-72 w-full"
+        className="km-top-card zzz-summary-item"
+        data-metric={metricKey}
         // global.css 给 .km-top-card 配了 transform 的 CSS 过渡，会和 motion 每帧写入的
         // transform 互相拖拽；这里只保留颜色/阴影过渡
         style={{ transitionProperty: "color, background-color, border-color, box-shadow" }}
@@ -436,9 +469,11 @@ const TopCard: React.FC<TopCardProps> = React.memo(
           },
         }}
       >
+        <span className="zzz-summary-corner" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
         <Flex direction="column" gap="1">
-          <label className="text-muted-foreground text-sm">{title}</label>
-          <label className="font-medium text-md">{value}</label>
+          <div className="zzz-summary-label">{title}</div>
+          <div className="zzz-summary-value">{value}</div>
+          <div className="zzz-summary-foot">{{ currentOnline: "ACTIVE / TOTAL", regionOverview: "REGIONS ONLINE", currentTime: "LOCAL TIME", trafficOverview: "TOTAL TRANSFER", networkSpeed: "REALTIME RATE" }[metricKey]}</div>
           {description && (
             <Text size="2" color="gray">
               {description}
@@ -452,12 +487,12 @@ const TopCard: React.FC<TopCardProps> = React.memo(
 
 const CurrentTimeValue = React.memo(() => {
   const [currentTime, setCurrentTime] = React.useState(() =>
-    new Date().toLocaleTimeString(),
+    new Date().toLocaleTimeString(undefined, { hour12: false }),
   );
 
   React.useEffect(() => {
     const timer = window.setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString());
+      setCurrentTime(new Date().toLocaleTimeString(undefined, { hour12: false }));
     }, 1000);
     return () => window.clearInterval(timer);
   }, []);

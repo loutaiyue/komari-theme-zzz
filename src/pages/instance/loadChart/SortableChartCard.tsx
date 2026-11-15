@@ -106,7 +106,7 @@ const SortableChartCard = ({
         */}
         <Card
           size="2"
-          className="h-full min-w-0 flex-col gap-km-group"
+          className="zzz-chart-card h-full min-w-0 flex-col gap-km-group"
           style={{ display: "flex" }}
         >
           <div className="-mt-2 flex h-5 shrink-0 items-center justify-center">

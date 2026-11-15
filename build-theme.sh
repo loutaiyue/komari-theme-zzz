@@ -1,184 +1,58 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Build an installable Komari theme archive on Linux or macOS.
+set -euo pipefail
 
-# Komari Theme Build Script
-# This script builds the theme package locally
-
-set -e  # Exit on any error
-
-echo "Building Komari Theme Package..."
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Function to print colored output
-print_status() {
-    echo -e "${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN} $1${NC}"
-}
-
-print_warning() {
-    echo -e "${YELLOW} $1${NC}"
-}
-
-print_error() {
-    echo -e "${RED}[ERROR] $1${NC}"
-}
-
-# Check if required commands exist
-check_dependencies() {
-    print_status "Checking dependencies..."
-    
-    if ! command -v node &> /dev/null; then
-        print_error "Node.js is not installed"
+for dependency in node npm zip; do
+    if ! command -v "$dependency" >/dev/null 2>&1; then
+        printf 'Missing dependency: %s\n' "$dependency" >&2
         exit 1
     fi
-    
-    if ! command -v npm &> /dev/null; then
-        print_error "npm is not installed"
+done
+
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+
+# Validate before using manifest fields in archive paths. Read separate lines to
+# preserve spaces in a relative preview path without evaluating it as shell code.
+theme_metadata="$(node --input-type=module <<'NODE'
+import fs from 'node:fs';
+import path from 'node:path';
+const theme = JSON.parse(fs.readFileSync('komari-theme.json', 'utf8'));
+if (typeof theme.short !== 'string' || !/^[a-z0-9-]+$/.test(theme.short) ||
+    typeof theme.version !== 'string' || !/^[a-zA-Z0-9.-]+$/.test(theme.version)) {
+    throw new Error('Invalid package name or version.');
+}
+if (typeof theme.preview !== 'string' || !theme.preview ||
+    /[\r\n\\]/.test(theme.preview) || path.posix.isAbsolute(theme.preview) ||
+    theme.preview.split('/').some(part => part === '..' || part === '' || part === '.')) {
+    throw new Error('Preview must be a relative file path inside the theme directory.');
+}
+console.log([theme.short, theme.version, theme.preview].join('\n'));
+NODE
+)"
+{
+    IFS= read -r theme_short
+    IFS= read -r theme_version
+    IFS= read -r theme_preview
+} <<< "$theme_metadata"
+
+printf 'Building %s v%s...\n' "$theme_short" "$theme_version"
+npm run build
+
+for required in dist/index.html komari-theme.json "$theme_preview"; do
+    if [[ ! -f "$required" ]]; then
+        printf 'Missing required theme file: %s\n' "$required" >&2
         exit 1
     fi
-    
-    if ! command -v zip &> /dev/null; then
-        print_error "zip is not installed"
-        exit 1
-    fi
-    
-    print_success "All dependencies are available"
-}
+done
 
-# Install dependencies
-install_dependencies() {
-    print_status "Installing dependencies..."
-    npm install
-    print_success "Dependencies installed"
-}
+mkdir -p release
+theme_archive="$(pwd)/release/${theme_short}-v${theme_version}.zip"
+theme_temp_dir="$(mktemp -d "$(pwd)/release/.package.XXXXXX")"
+theme_temp_archive="$theme_temp_dir/theme.zip"
+trap 'rm -f "$theme_temp_archive"; rmdir "$theme_temp_dir"' EXIT
 
-# Build the project
-build_project() {
-    print_status "Building project..."
-    npm run build
-    print_success "Project built successfully"
-}
-
-# Update theme configuration
-update_theme_config() {
-    print_status "Updating theme configuration..."
-    
-    # Get current date in YY.MM.DD format
-    VERSION_DATE=$(date +"%y.%m.%d")
-    # Get commit hash (short)
-    if git rev-parse --short HEAD &> /dev/null; then
-        COMMIT_HASH=$(git rev-parse --short HEAD)
-    else
-        COMMIT_HASH="dev"
-        print_warning "Not a git repository, using 'dev' as commit hash"
-    fi
-    
-    echo "Version: $VERSION_DATE"
-    echo "Commit: $COMMIT_HASH"
-
-}
-
-# Verify required files exist
-verify_files() {
-    print_status "Verifying required files..."
-    
-    local files_missing=false
-    
-    if [ ! -f "preview.webp" ]; then
-        print_error "preview.webp not found"
-        files_missing=true
-    fi
-    
-    if [ ! -f "komari-theme.json" ]; then
-        print_error "komari-theme.json not found"
-        files_missing=true
-    fi
-    
-    if [ ! -d "dist" ]; then
-        print_error "dist/ directory not found"
-        files_missing=true
-    fi
-    
-    if [ "$files_missing" = true ]; then
-        print_error "Some required files are missing"
-        exit 1
-    fi
-    
-    print_success "All required files found!"
-}
-
-# Create theme package
-create_package() {
-    print_status "Creating theme package..."
-    
-    # Get version info
-    VERSION_DATE=$(date +"%y.%m.%d")
-    if git rev-parse --short HEAD &> /dev/null; then
-        COMMIT_HASH=$(git rev-parse --short HEAD)
-    else
-        COMMIT_HASH="dev"
-    fi
-    
-    # Create a temporary directory for the package
-    rm -rf theme-package
-    mkdir -p theme-package
-    
-    # Copy required files
-    cp preview.webp theme-package/
-    cp komari-theme.json theme-package/
-    cp -r dist/ theme-package/
-    
-    # Create zip file with version and commit hash
-    ZIP_NAME="komari-theme-v${VERSION_DATE}-${COMMIT_HASH}.zip"
-    
-    cd theme-package
-    zip -r "../dist/${ZIP_NAME}" .
-    cd ..
-    
-    # Clean up
-    rm -rf theme-package
-    
-    print_success "Created package: ${ZIP_NAME}"
-    ls -la "dist/${ZIP_NAME}"
-}
-
-# Main execution
-main() {
-    echo "======================================"
-    echo "  Komari Theme Package Builder"
-    echo "======================================"
-    echo
-    
-    check_dependencies
-    echo
-    
-    install_dependencies
-    echo
-    
-    build_project
-    echo
-    
-    update_theme_config
-    echo
-    
-    verify_files
-    echo
-    
-    create_package
-    echo
-    
-    print_success "Theme package build completed! 🎉"
-    echo
-    echo "You can now use the generated zip file as a theme package."
-}
-
-# Run main function
-main "$@"
+# Start a fresh archive so removed build assets cannot linger after a rebuild.
+# Only the three theme entries belong at the ZIP root; exclude old ZIP packages.
+zip -q -r "$theme_temp_archive" dist komari-theme.json "$theme_preview" -x '*.zip'
+mv -f "$theme_temp_archive" "$theme_archive"
+printf 'Created theme package: %s\n' "$theme_archive"

@@ -12,7 +12,7 @@ import * as path from "path";
 import dotenv from "dotenv";
 
 function localKomariThemePlugin(): Plugin {
-  const themeRequestPath = "/themes/default/komari-theme.json";
+  const themeRequestPaths = ["/themes/default/komari-theme.json", "/themes/signal-control/komari-theme.json"];
   const localThemeFile = path.resolve(__dirname, "komari-theme.json");
 
   return {
@@ -24,7 +24,7 @@ function localKomariThemePlugin(): Plugin {
         if (!req.url) return next();
 
         const url = new URL(req.url, "http://localhost");
-        if (!url.pathname.endsWith(themeRequestPath)) return next();
+        if (!themeRequestPaths.some((themePath) => url.pathname.endsWith(themePath))) return next();
 
         fs.readFile(localThemeFile, (err, data) => {
           if (err) {
@@ -71,8 +71,8 @@ export default defineConfig(({ mode }) => {
           name: "Komari Monitor",
           short_name: "Komari Monitor",
           description: "A simple server monitor tool",
-          theme_color: "#2563eb",
-          background_color: "#ffffff",
+          theme_color: "#171815",
+          background_color: "#efefeb",
           display: "standalone",
           scope: base,
           start_url: base,

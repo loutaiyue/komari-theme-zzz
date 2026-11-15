@@ -1,10 +1,10 @@
+import { signalSeriesColor } from "./signalPalette";
 import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, X } from "lucide-react";
 import MetricLegendItem from "@/components/MetricLegendItem";
 import type { PingMetricStat } from "@/types/metrics";
 import {
   isPingMetric,
-  metricSeriesColor,
   pingMetricStatKey,
   pingTaskId,
 } from "@/utils/metricSeries";
@@ -100,7 +100,7 @@ const ChartLegend = ({
             >
               <span
                 className="size-2 shrink-0 rounded-[2px]"
-                style={{ backgroundColor: metricSeriesColor(index) }}
+                style={{ backgroundColor: signalSeriesColor(index) }}
               />
               <span className="truncate">{getMetricLabel(metricKey, definitionMap)}</span>
               <button

@@ -9,7 +9,7 @@ type TimeViewSelectorProps = {
 
 /** 时间范围预设（实时 / 10 分钟 / … / 自定义），窄屏时横向滚动 */
 const TimeViewSelector = ({ timeViews, value, onChange }: TimeViewSelectorProps) => (
-  <div className="w-full overflow-x-auto">
+  <div className="zzz-time-view w-full overflow-x-auto">
     <div className="w-max mx-auto">
       <SegmentedControl.Root value={value} onValueChange={onChange}>
         {timeViews.map((view) => (

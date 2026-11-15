@@ -1,0 +1,76 @@
+name: SIGNAL CONTROL Theme
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # Only final releases publish assets; normal branch/PR/manual builds still run.
+    if: github.event_name != 'release' || (!github.event.release.prerelease && !github.event.release.draft)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Verify release tag matches theme version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const theme = JSON.parse(fs.readFileSync('komari-theme.json', 'utf8'));
+          const expectedTag = `v${theme.version}`;
+          if (theme.short !== 'signal-control' || process.env.RELEASE_TAG !== expectedTag) {
+            throw new Error(`Publish SIGNAL CONTROL using the theme version tag ${expectedTag}.`);
+          }
+          NODE
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test theme
+        run: npm run test:theme
+
+      - name: Build theme package
+        run: bash build-theme.sh
+
+      - name: Upload theme artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signal-control-theme
+          path: release/*.zip
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'release' && !github.event.release.prerelease && !github.event.release.draft
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download theme package
+        uses: actions/download-artifact@v4
+        with:
+          name: signal-control-theme
+          path: release
+
+      - name: Upload installable ZIP to this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$RELEASE_TAG" release/*.zip --repo "$GITHUB_REPOSITORY" --clobber

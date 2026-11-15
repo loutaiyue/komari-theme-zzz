@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="750" viewBox="0 0 1200 750">
+  <defs><pattern id="stripe" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><path d="M0 0V8" stroke="#ffffff" stroke-opacity=".035" stroke-width="2"/></pattern></defs>
+  <rect width="1200" height="750" fill="#efefeb"/>
+  <path fill="#171815" d="M0 0h1200v64H0z"/><path fill="#d7ff00" d="M0 64h1200v4H0zM36 15h34v25l-9 9H36z"/>
+  <g font-family="Arial,sans-serif"><text x="43" y="42" font-size="29" font-weight="900" font-style="italic" fill="#171815">K</text><text x="82" y="39" font-size="25" font-weight="900" fill="#f5f5ed">KOMARI</text><text x="259" y="38" font-size="11" fill="#d7ff00">OVERVIEW</text><text x="972" y="38" font-size="10" letter-spacing="2" fill="#afb2a3">SIGNAL CONTROL</text>
+  <g font-family="monospace" font-size="10" fill="#77796e"><text x="36" y="101">+ SYSTEM / OVERVIEW</text><text x="1005" y="101">SC—01 / MONITOR</text><text x="36" y="134">LIVE INFRASTRUCTURE / ALL SYSTEMS</text></g>
+  <path fill="#d7ff00" d="M264 193h394l-5 19H259z"/>
+  <text x="32" y="211" font-family="Impact,Arial Black,sans-serif" font-size="78" font-weight="900" letter-spacing="-4" fill="#191a18">KEEP IT ONLINE.</text>
+  <text x="36" y="248" font-size="16" font-weight="900" fill="#191a18">Every signal. Under control.</text><text x="330" y="248" font-size="10" fill="#77796e">REAL-TIME INFRASTRUCTURE MONITORING</text>
+  <path d="M820 123h322l22 22v121H820z" fill="#20231c"/><path d="M820 123h322l22 22v121H820z" fill="url(#stripe)"/>
+  <text x="842" y="146" font-family="monospace" font-size="10" fill="#b4bba6">UPLINK STATUS</text><circle cx="877" cy="202" r="28" fill="none" stroke="#6c7c3d"/><circle cx="877" cy="202" r="14" fill="none" stroke="#6c7c3d"/><path d="M849 202h56M877 174v56" stroke="#6c7c3d"/><circle cx="887" cy="189" r="3" fill="#d7ff00"/>
+  <text x="927" y="213" font-size="48" font-family="Impact,Arial Black,sans-serif" fill="#d7ff00">SIGNAL</text><text x="843" y="250" font-family="monospace" font-size="9" fill="#9aa38b">CONNECT / OBSERVE / CONTROL</text>
+  <path d="M36 290h1128v104H36z" fill="#fafaf7" stroke="#191a18"/><path d="M36 290h225v104H36z" fill="#d7ff00"/>
+  <path d="M261 290v104M487 290v104M713 290v104M939 290v104" stroke="#d3d4cc"/>
+  <g font-family="monospace" font-size="10" fill="#6a6d60"><text x="54" y="315">ONLINE / TOTAL</text><text x="279" y="315">REGIONS</text><text x="505" y="315">CPU LOAD</text><text x="731" y="315">NETWORK I/O</text><text x="957" y="315">TRANSFER</text></g>
+  <g font-family="Impact,Arial Black,sans-serif" font-size="35" fill="#191a18"><text x="54" y="364">06 / 08</text><text x="279" y="364">05</text><text x="505" y="364">24.8%</text><text x="731" y="364">58.6 MB/s</text><text x="957" y="364">1.24 TB</text></g>
+  <path d="M36 425h42v34H36z" fill="#191a18"/><text x="44" y="451" font-size="25" font-family="Impact,sans-serif" fill="#efefeb">01</text><text x="94" y="443" font-size="20" font-weight="900" fill="#191a18">NODE NETWORK</text><text x="95" y="459" font-size="8" font-family="monospace" letter-spacing="2" fill="#77796e">YOUR INFRASTRUCTURE AT A GLANCE</text><path d="M360 442h804" stroke="#d3d4cc"/>
+  <g fill="#fafaf7" stroke="#d3d4cc"><path d="M36 481h258l12 12v191H36z"/><path d="M322 481h258l12 12v191H322z"/><path d="M608 481h258l12 12v191H608z"/><path d="M894 481h258l12 12v191H894z"/></g>
+  <g font-family="monospace" font-size="9" fill="#4c7500"><text x="53" y="505">JP / TOKYO</text><text x="339" y="505">SG / SINGAPORE</text><text x="625" y="505">US / LOS ANGELES</text><text x="911" y="505">DE / FRANKFURT</text></g>
+  <g font-size="17" font-weight="900" fill="#191a18"><text x="53" y="537">Edge Node 01</text><text x="339" y="537">Gateway 02</text><text x="625" y="537">Compute 03</text><text x="911" y="537">Storage 04</text></g>
+  <g fill="#e4e5dd"><path d="M53 562h235v5H53zM53 583h235v5H53zM53 604h235v5H53zM339 562h235v5H339zM339 583h235v5H339zM339 604h235v5H339zM625 562h235v5H625zM625 583h235v5H625zM625 604h235v5H625zM911 562h235v5H911zM911 583h235v5H911zM911 604h235v5H911z"/></g>
+  <g fill="#191a18"><path d="M53 562h95v5H53zM53 583h140v5H53zM53 604h70v5H53zM339 562h135v5H339zM339 583h75v5H339zM339 604h110v5H339zM625 562h180v5H625zM625 583h120v5H625zM625 604h145v5H625zM911 562h55v5H911zM911 583h110v5H911zM911 604h190v5H911z"/></g>
+  <g font-family="monospace" font-size="9" fill="#77796e"><text x="53" y="651">↓ 12.4 MB/s  ↑ 2.8 MB/s</text><text x="339" y="651">↓ 18.2 MB/s  ↑ 3.1 MB/s</text><text x="625" y="651">↓ 21.6 MB/s  ↑ 4.7 MB/s</text><text x="911" y="651">↓ 6.4 MB/s  ↑ 2.3 MB/s</text></g>
+  <path d="M36 711h1128" stroke="#191a18" stroke-width="2"/><text x="36" y="736" font-family="monospace" font-size="10" fill="#77796e">SIGNAL CONTROL / THEME PREVIEW · ILLUSTRATIVE DATA</text><text x="1020" y="736" font-family="monospace" font-size="10" fill="#77796e">KEEP IT ONLINE.</text>
+  </g>
+</svg>
