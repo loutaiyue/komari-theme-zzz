@@ -7,7 +7,7 @@
 ## 安装
 
 1. 先安装并运行 [Komari](https://github.com/komari-monitor/komari)。
-2. 在本仓库的 **Releases** 页面下载 `signal-control-v1.0.0.zip`。请选择主题 ZIP 附件，GitHub 自动生成的 `Source code` 是源码包。
+2. 在 [Releases](https://github.com/loutaiyue/komari-theme-zzz/releases) 页面下载 `signal-control-v1.0.0.zip`。请选择主题 ZIP 附件，GitHub 自动生成的 `Source code` 是源码包。
 3. 在 Komari 后台进入 **主题管理 → 上传主题**，上传 ZIP 并应用 **SIGNAL CONTROL**。
 
 主题由 Komari 提供服务，服务器无需额外运行 Node.js 或 Vite。建议将站点部署在独立域名或子域名的根路径。

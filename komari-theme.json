@@ -3,8 +3,8 @@
   "short": "signal-control",
   "description": "绝区零风格监控主题：黑白灰、荧光黄绿、切角面板与个人背景 / A ZZZ-inspired monitoring theme with angular panels and personal wallpapers.",
   "version": "1.0.0",
-  "author": "SIGNAL CONTROL · Based on Komari by Akizon77",
-  "url": "https://github.com/komari-monitor/komari-web",
+  "author": "loutaiyue · Based on Komari by Akizon77",
+  "url": "https://github.com/loutaiyue/komari-theme-zzz",
   "preview": "preview.svg",
   "configuration": {
     "type": "managed",
